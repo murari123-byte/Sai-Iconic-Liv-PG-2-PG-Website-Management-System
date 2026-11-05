@@ -1,0 +1,241 @@
+.admin-shell{min-height:100vh;background:#fff8e8;color:#1b211d}.admin-header{height:78px;background:#064e3b;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,5vw,65px)}.admin-brand{display:flex;align-items:center;gap:10px}.admin-brand img{width:50px;height:50px;object-fit:contain;background:white;border-radius:50%}.admin-brand span{display:flex;flex-direction:column;gap:3px}.admin-brand b{font-size:15px}.admin-brand small{font-size:9px;letter-spacing:1.5px;color:#e4c25d}.admin-back{display:flex;gap:8px;align-items:center;font-size:12px;color:#f6e8c3}.admin-content{max-width:1120px;margin:0 auto;padding:42px 24px 70px}.admin-title-row{display:flex;align-items:center;justify-content:space-between;gap:18px}.admin-title-row h1{font-size:38px;letter-spacing:-1px;margin:8px 0}.admin-title-row p{font-size:13px;color:#72766f}.admin-refresh,.admin-save{display:inline-flex;align-items:center;gap:8px;background:#064e3b;color:#fff;border:0;border-radius:4px;padding:12px 15px;cursor:pointer;font-weight:600;font-size:12px}.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0}.admin-stats>div{display:grid;grid-template-columns:35px 1fr;align-items:center;gap:4px 12px;padding:20px;background:white;border:1px solid #e4ddcd}.admin-stats svg{grid-row:span 2;color:#a17b16}.admin-stats span{font-size:11px;color:#72766f}.admin-stats strong{font-size:24px;color:#064e3b}.admin-tabs{display:flex;gap:7px;border-bottom:1px solid #ded7c8;margin-bottom:20px}.admin-tabs button{padding:13px 18px;border:0;background:transparent;color:#5e655e;cursor:pointer;font-weight:600;font-size:12px}.admin-tabs button.active{color:#064e3b;border-bottom:3px solid #d4af37}.admin-panel{padding:25px;background:#fff;border:1px solid #e4ddcd}.admin-panel h2{font-size:20px;margin:0 0 20px}.admin-room-list{display:grid;gap:10px}.admin-room{display:flex;align-items:center;gap:15px;padding:12px;border:1px solid #ece8df}.admin-room img{width:82px;height:68px;object-fit:cover;background:#eee}.admin-room>div{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}.admin-room b{font-size:13px}.admin-room span{font-size:12px;color:#064e3b;font-weight:700}.admin-room small{font-size:11px;color:#72766f;overflow-wrap:anywhere}.delete-btn{border:0;background:#fbefeb;color:#9b3825;padding:10px;cursor:pointer}.admin-add-form{margin-top:28px;padding-top:24px;border-top:1px solid #e4ddcd}.admin-add-form h3{display:flex;align-items:center;gap:8px;font-size:15px}.admin-fields{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.admin-fields label{display:flex;flex-direction:column;gap:7px;font-size:11px;font-weight:700}.admin-fields input,.admin-fields select{padding:12px;border:1px solid #ddd5c6;background:#fffdf8;min-width:0;font:inherit;font-size:12px}.admin-save{margin-top:16px}.admin-save.small{padding:8px 10px;font-size:10px}.admin-empty{font-size:13px;color:#72766f}.admin-enquiry-list{display:grid;gap:12px}.admin-enquiry{border:1px solid #e4ddcd;padding:16px}.enquiry-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.enquiry-top b{font-size:14px}.pill{font-size:10px;padding:5px 8px;background:#fff1d2;color:#7b5b0b}.pill.done{background:#e2f3e8;color:#17633d}.admin-enquiry p{font-size:12px;color:#555d55;margin:9px 0}.admin-enquiry small{font-size:10px;color:#7b817a}.enquiry-message{white-space:pre-wrap}.admin-alert{padding:12px 15px;margin:15px 0;font-size:12px}.admin-alert.error{background:#ffebe7;color:#923b2b}.admin-alert.success{background:#e5f6e9;color:#17633d}.admin-warning{font-size:11px;color:#7a5d22;margin-top:20px;line-height:1.7}@media(max-width:650px){.admin-content{padding:28px 15px 50px}.admin-title-row{align-items:flex-start}.admin-title-row h1{font-size:30px}.admin-stats{gap:7px}.admin-stats>div{padding:12px;grid-template-columns:1fr;gap:6px}.admin-stats svg{grid-row:auto}.admin-stats strong{font-size:20px}.admin-panel{padding:16px}.admin-fields{grid-template-columns:1fr}.admin-room img{width:62px;height:62px}.admin-room{gap:10px;padding:8px}.admin-room small{display:none}}
+
+
+
+/* Admin header actions and logout button */
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #d4af37;
+  border-radius: 9px;
+  background: #064e3b;
+  color: #fff8e8;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.admin-logout:hover {
+  background: #086448;
+}
+
+.admin-logout:focus-visible {
+  outline: 2px solid #d4af37;
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  .admin-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .admin-header-actions .admin-back,
+  .admin-logout {
+    font-size: 11px;
+  }
+}
+
+
+/* Physical PG Room and Resident Management */
+
+.admin-section-description {
+  color: #72766f;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: -10px 0 20px;
+}
+
+.admin-subheading {
+  font-size: 15px;
+  margin: 24px 0 14px;
+  color: #064e3b;
+}
+
+.admin-data-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-data-card {
+  padding: 16px;
+  border: 1px solid #e4ddcd;
+  background: #fffdf8;
+}
+
+.admin-data-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.admin-data-card-heading b {
+  font-size: 14px;
+  color: #064e3b;
+}
+
+.admin-occupancy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.admin-occupancy span {
+  padding: 7px 10px;
+  background: #f5f0e3;
+  color: #555d55;
+  font-size: 11px;
+  border-radius: 4px;
+}
+
+.admin-room-detail {
+  font-size: 12px;
+  color: #72766f;
+  line-height: 1.7;
+}
+
+.admin-form-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-cancel,
+.admin-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid #d9d1c1;
+  border-radius: 4px;
+  background: #fff;
+  color: #064e3b;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-action-btn.danger {
+  background: #fbefeb;
+  border-color: #f0d5ce;
+  color: #9b3825;
+}
+
+.admin-action-btn.whatsapp {
+  background: #e5f6e9;
+  border-color: #c8e8d0;
+  color: #17633d;
+}
+
+.admin-cancel:hover,
+.admin-action-btn:hover {
+  filter: brightness(.96);
+}
+
+.admin-search-form {
+  margin: 15px 0 22px;
+}
+
+.admin-search-fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.admin-search-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-search-fields input,
+.admin-search-fields select {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #ddd5c6;
+  background: #fffdf8;
+  font: inherit;
+  font-size: 12px;
+}
+
+.admin-room-search-results {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.admin-room-search-item {
+  padding: 10px 12px;
+  border: 1px solid #e4ddcd;
+  background: #fffdf8;
+  font-size: 12px;
+  color: #555d55;
+}
+
+.admin-resident-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-resident-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  font-size: 12px;
+  color: #555d55;
+}
+
+.admin-resident-info span {
+  overflow-wrap: anywhere;
+}
+
+.admin-data-card .admin-fields {
+  margin-top: 14px;
+}
+
+.admin-tabs {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 650px) {
+  .admin-search-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-resident-info {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-data-card {
+    padding: 12px;
+  }
+
+  .admin-form-actions > button {
+    flex: 1;
+  }
+}

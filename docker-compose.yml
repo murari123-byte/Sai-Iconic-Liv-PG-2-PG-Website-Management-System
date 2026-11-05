@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: sai-iconic-liv-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sai_iconic_liv
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - sai_iconic_liv_data:/var/lib/postgresql/data
+volumes:
+  sai_iconic_liv_data:
