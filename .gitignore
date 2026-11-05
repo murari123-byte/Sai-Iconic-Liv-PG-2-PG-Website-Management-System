@@ -1,16 +1,16 @@
+# Java / Maven build files
+backend/target/
+**/target/
+*.class
+
+# Node dependencies and builds
+node_modules/
+frontend/dist/
+
+# Environment files
 .env
 .env.*
 !.env.example
 **/.env
 **/.env.*
 !**/.env.example
-node_modules/
-frontend/dist/
-backend/target/
-*.class
-*.log
-.idea/
-.vscode/
-*.iml
-.DS_Store
-Thumbs.db
