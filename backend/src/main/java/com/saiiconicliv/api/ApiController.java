@@ -1,7 +1,10 @@
-
 package com.saiiconicliv.api;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -17,15 +20,21 @@ public class ApiController {
     private final RoomRepository rooms;
     private final EnquiryRepository enquiries;
     private final ResidentService residentService;
+    private final PaymentRepository payments;
+    private final ResidentRepository residents;
 
     public ApiController(
             RoomRepository rooms,
             EnquiryRepository enquiries,
-            ResidentService residentService) {
+            ResidentService residentService,
+            PaymentRepository payments,
+            ResidentRepository residents) {
 
         this.rooms = rooms;
         this.enquiries = enquiries;
         this.residentService = residentService;
+        this.payments = payments;
+        this.residents = residents;
     }
 
     // ================= GENERAL APIs =================
@@ -174,6 +183,37 @@ public class ApiController {
     }
 
     // ================= RESIDENT MANAGEMENT =================
+
+    // ================= PAYMENT MANAGEMENT =================
+
+    public record PaymentRequest(
+            @NotNull Long residentId,
+            @NotNull BigDecimal amount,
+            @NotNull LocalDate paymentDate,
+            @NotBlank String forMonth,
+            String notes
+    ) {}
+
+    @PostMapping("/admin/payments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Payment addPayment(@Valid @RequestBody PaymentRequest request) {
+        Resident resident = residents.findById(request.residentId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resident not found"));
+
+        Payment payment = new Payment(
+            resident,
+            request.amount(),
+            request.paymentDate(),
+            request.forMonth(),
+            request.notes()
+        );
+        return payments.save(payment);
+    }
+
+    @GetMapping("/admin/residents/{residentId}/payments")
+    public List<Payment> getResidentPayments(@PathVariable Long residentId) {
+        return payments.findByResidentIdOrderByPaymentDateDesc(residentId);
+    }
 
     // Search residents by name, phone number, or room number
     @GetMapping("/admin/residents")

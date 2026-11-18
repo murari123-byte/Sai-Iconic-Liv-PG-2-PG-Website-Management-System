@@ -49,6 +49,7 @@ export default function Admin() {
   const navigate = useNavigate();
 
   const [tab, setTab] = useState('rooms');
+  const [payments, setPayments] = useState([]);
 
   const [rooms, setRooms] = useState([]);
   const [enquiries, setEnquiries] = useState([]);
@@ -70,6 +71,8 @@ export default function Admin() {
   const [pgRoomDraft, setPgRoomDraft] = useState(emptyRoomDraft);
   const [editingPgRoom, setEditingPgRoom] = useState(null);
 
+  const [editingRoom, setEditingRoom] = useState(null);
+
   const [residentDraft, setResidentDraft] = useState(emptyResidentDraft);
   const [editingResident, setEditingResident] = useState(null);
 
@@ -79,7 +82,18 @@ export default function Admin() {
   const [searchApplied, setSearchApplied] = useState('');
   const [statusApplied, setStatusApplied] = useState('ACTIVE');
 
+  const [paymentSearch, setPaymentSearch] = useState('');
+  const [paymentMonth, setPaymentMonth] = useState(today().slice(0, 7));
+  const [selectedResidentForPayment, setSelectedResidentForPayment] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState(today());
+  const [paymentNotes, setPaymentNotes] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(null);
+
+  // BULK MESSAGING STATE
+  const [selectedForMsg, setSelectedForMsg] = useState([]); // Array of phone numbers
+  const [bulkMsgText, setBulkMsgText] = useState('');
+  const [msgSearch, setMsgSearch] = useState('');
 
   const signOut = useCallback(() => {
     sessionStorage.removeItem('sai_admin_token');
@@ -109,6 +123,7 @@ export default function Admin() {
         enquiryResponse,
         pgRoomResponse,
         residentResponse,
+        paymentResponse,
       ] = await Promise.all([
         api.get('/admin/rooms'),
         api.get('/admin/enquiries'),
@@ -119,18 +134,25 @@ export default function Admin() {
             status: statusApplied,
           },
         }),
+        api.get('/admin/payments/summary', {
+          params: {
+            search: paymentSearch,
+            month: paymentMonth,
+          },
+        }),
       ]);
 
       setRooms(roomResponse.data);
       setEnquiries(enquiryResponse.data);
       setPgRooms(pgRoomResponse.data);
       setResidents(residentResponse.data);
+      setPayments(paymentResponse.data);
     } catch (err) {
       setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
-  }, [handleApiError, searchApplied, statusApplied]);
+  }, [handleApiError, searchApplied, statusApplied, paymentSearch, paymentMonth]);
 
   useEffect(() => {
     if (!sessionStorage.getItem('sai_admin_token')) {
@@ -146,14 +168,20 @@ export default function Admin() {
     setError('');
     setStatus('');
 
-    try {
-      await api.post('/admin/rooms', {
-        ...draft,
-        sharing: Number(draft.sharing),
-        rent: Number(draft.rent),
-      });
+    const payload = {
+      ...draft,
+      sharing: Number(draft.sharing),
+      rent: Number(draft.rent),
+    };
 
-      setStatus('Room pricing option added successfully.');
+    try {
+      if (editingRoom) {
+        await api.put(`/admin/rooms/${editingRoom.id}`, payload);
+        setStatus('Room pricing option updated successfully.');
+      } else {
+        await api.post('/admin/rooms', payload);
+        setStatus('Room pricing option added successfully.');
+      }
 
       setDraft({
         sharing: 2,
@@ -162,7 +190,59 @@ export default function Admin() {
         description: '',
         active: true,
       });
+      setEditingRoom(null);
 
+      await load();
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  }
+
+  function editRoom(room) {
+    setEditingRoom(room);
+    setDraft({
+      sharing: room.sharing,
+      rent: room.rent,
+      imageUrl: room.imageUrl,
+      description: room.description,
+      active: room.active,
+    });
+    setError('');
+    setStatus('');
+  }
+
+  function cancelRoomEdit() {
+    setEditingRoom(null);
+    setDraft({
+      sharing: 2,
+      rent: 12000,
+      imageUrl: '/images/two-sharing.png',
+      description: '',
+      active: true,
+    });
+  }
+
+  // PAYMENT MANAGEMENT
+
+  async function recordPayment(event) {
+    event.preventDefault();
+    if (!selectedResidentForPayment) return;
+
+    setError('');
+    setStatus('');
+
+    try {
+      await api.post(`/admin/residents/${selectedResidentForPayment.residentId}/payments`, {
+        amount: Number(paymentAmount),
+        paymentDate: paymentDate,
+        forMonth: paymentMonth,
+        notes: paymentNotes,
+      });
+
+      setStatus(`Payment of ₹${paymentAmount} recorded for ${selectedResidentForPayment.name}.`);
+      setSelectedResidentForPayment(null);
+      setPaymentAmount('');
+      setPaymentNotes('');
       await load();
     } catch (err) {
       setError(handleApiError(err));
@@ -184,6 +264,33 @@ export default function Admin() {
     }
   }
 
+  // PAYMENT MANAGEMENT
+
+  async function recordPayment(event) {
+    event.preventDefault();
+    if (!selectedResidentForPayment) return;
+
+    setError('');
+    setStatus('');
+
+    try {
+      await api.post(`/admin/residents/${selectedResidentForPayment.residentId}/payments`, {
+        amount: Number(paymentAmount),
+        paymentDate: paymentDate,
+        forMonth: paymentMonth,
+        notes: paymentNotes,
+      });
+
+      setStatus(`Payment of ₹${paymentAmount} recorded for ${selectedResidentForPayment.name}.`);
+      setSelectedResidentForPayment(null);
+      setPaymentAmount('');
+      setPaymentNotes('');
+      await load();
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  }
+
   async function toggleContacted(item) {
     setError('');
     setStatus('');
@@ -194,6 +301,33 @@ export default function Admin() {
       });
 
       setStatus('Enquiry status updated.');
+      await load();
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  }
+
+  // PAYMENT MANAGEMENT
+
+  async function recordPayment(event) {
+    event.preventDefault();
+    if (!selectedResidentForPayment) return;
+
+    setError('');
+    setStatus('');
+
+    try {
+      await api.post(`/admin/residents/${selectedResidentForPayment.residentId}/payments`, {
+        amount: Number(paymentAmount),
+        paymentDate: paymentDate,
+        forMonth: paymentMonth,
+        notes: paymentNotes,
+      });
+
+      setStatus(`Payment of ₹${paymentAmount} recorded for ${selectedResidentForPayment.name}.`);
+      setSelectedResidentForPayment(null);
+      setPaymentAmount('');
+      setPaymentNotes('');
       await load();
     } catch (err) {
       setError(handleApiError(err));
@@ -243,6 +377,33 @@ export default function Admin() {
     }
   }
 
+  // PAYMENT MANAGEMENT
+
+  async function recordPayment(event) {
+    event.preventDefault();
+    if (!selectedResidentForPayment) return;
+
+    setError('');
+    setStatus('');
+
+    try {
+      await api.post(`/admin/residents/${selectedResidentForPayment.residentId}/payments`, {
+        amount: Number(paymentAmount),
+        paymentDate: paymentDate,
+        forMonth: paymentMonth,
+        notes: paymentNotes,
+      });
+
+      setStatus(`Payment of ₹${paymentAmount} recorded for ${selectedResidentForPayment.name}.`);
+      setSelectedResidentForPayment(null);
+      setPaymentAmount('');
+      setPaymentNotes('');
+      await load();
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  }
+
   async function deactivatePgRoom(room) {
     if (room.occupiedBeds > 0) {
       setError('This room still has active residents. Vacate them before deactivating the room.');
@@ -257,6 +418,33 @@ export default function Admin() {
     try {
       await api.patch(`/admin/pg-rooms/${room.id}/deactivate`);
       setStatus(`Room ${room.roomNumber} deactivated.`);
+      await load();
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  }
+
+  // PAYMENT MANAGEMENT
+
+  async function recordPayment(event) {
+    event.preventDefault();
+    if (!selectedResidentForPayment) return;
+
+    setError('');
+    setStatus('');
+
+    try {
+      await api.post(`/admin/residents/${selectedResidentForPayment.residentId}/payments`, {
+        amount: Number(paymentAmount),
+        paymentDate: paymentDate,
+        forMonth: paymentMonth,
+        notes: paymentNotes,
+      });
+
+      setStatus(`Payment of ₹${paymentAmount} recorded for ${selectedResidentForPayment.name}.`);
+      setSelectedResidentForPayment(null);
+      setPaymentAmount('');
+      setPaymentNotes('');
       await load();
     } catch (err) {
       setError(handleApiError(err));
@@ -324,6 +512,33 @@ export default function Admin() {
     }
   }
 
+  // PAYMENT MANAGEMENT
+
+  async function recordPayment(event) {
+    event.preventDefault();
+    if (!selectedResidentForPayment) return;
+
+    setError('');
+    setStatus('');
+
+    try {
+      await api.post(`/admin/residents/${selectedResidentForPayment.residentId}/payments`, {
+        amount: Number(paymentAmount),
+        paymentDate: paymentDate,
+        forMonth: paymentMonth,
+        notes: paymentNotes,
+      });
+
+      setStatus(`Payment of ₹${paymentAmount} recorded for ${selectedResidentForPayment.name}.`);
+      setSelectedResidentForPayment(null);
+      setPaymentAmount('');
+      setPaymentNotes('');
+      await load();
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  }
+
   async function vacateResident(resident) {
     if (!window.confirm(
       `Mark ${resident.name} as vacated from room ${resident.roomNumber}, bed ${resident.bedNumber}?`
@@ -338,6 +553,33 @@ export default function Admin() {
       });
 
       setStatus(`${resident.name} has been marked as vacated.`);
+      await load();
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  }
+
+  // PAYMENT MANAGEMENT
+
+  async function recordPayment(event) {
+    event.preventDefault();
+    if (!selectedResidentForPayment) return;
+
+    setError('');
+    setStatus('');
+
+    try {
+      await api.post(`/admin/residents/${selectedResidentForPayment.residentId}/payments`, {
+        amount: Number(paymentAmount),
+        paymentDate: paymentDate,
+        forMonth: paymentMonth,
+        notes: paymentNotes,
+      });
+
+      setStatus(`Payment of ₹${paymentAmount} recorded for ${selectedResidentForPayment.name}.`);
+      setSelectedResidentForPayment(null);
+      setPaymentAmount('');
+      setPaymentNotes('');
       await load();
     } catch (err) {
       setError(handleApiError(err));
@@ -480,6 +722,20 @@ export default function Admin() {
           >
             Resident Management
           </button>
+
+          <button
+            className={tab === 'payments' ? 'active' : ''}
+            onClick={() => setTab('payments')}
+          >
+            Rent Payments
+          </button>
+
+          <button
+            className={tab === 'messaging' ? 'active' : ''}
+            onClick={() => setTab('messaging')}
+          >
+            Send Notice
+          </button>
         </div>
 
         {/* ROOM PRICING */}
@@ -516,12 +772,24 @@ export default function Admin() {
                   >
                     <Trash2 size={17} />
                   </button>
+
+                  <button
+                    className="admin-action-btn"
+                    style={{ marginLeft: '10px' }}
+                    onClick={() => editRoom(room)}
+                    aria-label="Edit room"
+                  >
+                    <Pencil size={15} /> Edit
+                  </button>
                 </article>
               ))}
             </div>
 
             <form className="admin-add-form" onSubmit={saveRoom}>
-              <h3><Plus size={18} /> Add room pricing option</h3>
+              <h3>
+                {editingRoom ? <Pencil size={18} /> : <Plus size={18} />}
+                {editingRoom ? 'Edit room pricing option' : 'Add room pricing option'}
+              </h3>
 
               <div className="admin-fields">
                 <label>
@@ -574,9 +842,21 @@ export default function Admin() {
                 </label>
               </div>
 
-              <button className="admin-save" type="submit">
-                <Save size={16} /> Save room
-              </button>
+              <div className="admin-form-actions" style={{ marginTop: '15px' }}>
+                <button className="admin-save" type="submit">
+                  <Save size={16} /> {editingRoom ? 'Update room' : 'Save room'}
+                </button>
+
+                {editingRoom && (
+                  <button
+                    className="admin-cancel"
+                    type="button"
+                    onClick={cancelRoomEdit}
+                  >
+                    <X size={16} /> Cancel
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         )}
@@ -646,13 +926,18 @@ export default function Admin() {
                   Room number
                   <input
                     value={pgRoomDraft.roomNumber}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      let val = event.target.value;
+                      // Auto-insert a hyphen before the last digit if it's 4 digits starting with 10 (e.g. 1033 -> 103-3, 1042 -> 104-2)
+                      if (/^10\d{2}$/.test(val) && !val.includes('-')) {
+                        val = val.slice(0, 3) + '-' + val.slice(3);
+                      }
                       setPgRoomDraft({
                         ...pgRoomDraft,
-                        roomNumber: event.target.value,
-                      })
-                    }
-                    placeholder="Example: 101"
+                        roomNumber: val,
+                      });
+                    }}
+                    placeholder="Example: 101 or 103-3"
                     required
                   />
                 </label>
@@ -1079,6 +1364,323 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* RENT PAYMENTS */}
+
+        {tab === 'payments' && (
+          <div className="admin-panel">
+            <h2>Rent Payment Tracking</h2>
+            <p className="admin-section-description">
+              Search by resident name or room number to view monthly rent status, total paid, and calculated balance.
+            </p>
+
+            {/* SEARCH & MONTH SELECTOR */}
+            <form className="admin-search-form" onSubmit={(e) => { e.preventDefault(); load(); }}>
+              <h3>Filter Rent Records</h3>
+              <div className="admin-search-fields">
+                <label>
+                  Search Name / Room
+                  <input
+                    value={paymentSearch}
+                    onChange={(e) => setPaymentSearch(e.target.value)}
+                    placeholder="Search by resident name or room number"
+                  />
+                </label>
+
+                <label>
+                  Select Month
+                  <input
+                    type="month"
+                    value={paymentMonth}
+                    onChange={(e) => setPaymentMonth(e.target.value)}
+                  />
+                </label>
+
+                <button className="admin-save" type="submit">
+                  Search / Apply
+                </button>
+              </div>
+            </form>
+
+            {/* RECORD PAYMENT MODAL / INLINE FORM */}
+            {selectedResidentForPayment && (
+              <form className="admin-add-form" onSubmit={recordPayment} style={{ marginBottom: '24px' }}>
+                <h3>
+                  <Plus size={18} /> Record Rent Payment for {selectedResidentForPayment.name} (Room {selectedResidentForPayment.roomNumber})
+                </h3>
+
+                <div className="admin-fields">
+                  <label>
+                    Payment Type
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', height: '40px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <input
+                          type="radio"
+                          name="paymentType"
+                          value="full"
+                          checked={paymentAmount == selectedResidentForPayment.balance}
+                          onChange={() => setPaymentAmount(selectedResidentForPayment.balance)}
+                        />
+                        Fully Paid (₹{Number(selectedResidentForPayment.balance).toLocaleString('en-IN')})
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <input
+                          type="radio"
+                          name="paymentType"
+                          value="custom"
+                          checked={paymentAmount != selectedResidentForPayment.balance}
+                          onChange={() => setPaymentAmount('')}
+                        />
+                        Any Balance
+                      </label>
+                    </div>
+                  </label>
+
+                  <label>
+                    Amount Paid (₹)
+                    <input
+                      type="number"
+                      min="1"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      placeholder={`Actual Rent: ₹${selectedResidentForPayment.actualRent}`}
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Payment Date
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    For Month
+                    <input
+                      type="month"
+                      value={paymentMonth}
+                      onChange={(e) => setPaymentMonth(e.target.value)}
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Notes / Reference
+                    <input
+                      value={paymentNotes}
+                      onChange={(e) => setPaymentNotes(e.target.value)}
+                      placeholder="GPay / Cash / UPI ref"
+                    />
+                  </label>
+                </div>
+
+                <div className="admin-form-actions">
+                  <button className="admin-save" type="submit">
+                    <Save size={16} /> Save Payment
+                  </button>
+                  <button
+                    className="admin-cancel"
+                    type="button"
+                    onClick={() => setSelectedResidentForPayment(null)}
+                  >
+                    <X size={16} /> Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* PENDING BALANCE NOTIFICATIONS */}
+            {payments.filter(p => Number(p.balance) > 0).length > 0 && (
+              <div className="admin-panel" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', marginBottom: '20px' }}>
+                <h3 style={{ color: '#991b1b', marginTop: 0 }}>Pending Balances</h3>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  {payments.filter(p => Number(p.balance) > 0).map(p => (
+                    <li key={p.residentId} style={{ color: '#7f1d1d', padding: '5px 0' }}>
+                      <strong>{p.name}</strong> (Room {p.roomNumber}): <strong>₹{Number(p.balance).toLocaleString('en-IN')}</strong> outstanding
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* PAYMENTS LIST / SUMMARY */}
+            <div className="admin-resident-heading">
+              <h3>Month: {paymentMonth} Rent Status</h3>
+              <span>{payments.length} residents</span>
+            </div>
+
+            {payments.length === 0 ? (
+              <p className="admin-empty">No active residents found for this filter.</p>
+            ) : (
+              <div className="admin-data-list">
+                {payments.map((p) => {
+                  const isFullyPaid = Number(p.balance) <= 0;
+                  return (
+                    <article className="admin-data-card" key={p.residentId}>
+                      <div className="admin-data-card-heading">
+                        <div>
+                          <b>{p.name}</b>
+                          <small> Room {p.roomNumber} · Bed {p.bedNumber}</small>
+                        </div>
+
+                        <span className={isFullyPaid ? 'pill done' : 'pill'}>
+                          {isFullyPaid ? 'Paid in Full' : `Pending ₹${p.balance}`}
+                        </span>
+                      </div>
+
+                      <div className="admin-occupancy">
+                        <div>
+                          <span>Actual Rent</span>
+                          <strong>₹{Number(p.actualRent).toLocaleString('en-IN')}</strong>
+                        </div>
+                        <div>
+                          <span>Total Paid</span>
+                          <strong style={{ color: '#064e3b' }}>
+                            ₹{Number(p.totalPaid).toLocaleString('en-IN')}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>Balance Due</span>
+                          <strong style={{ color: Number(p.balance) > 0 ? '#9b3825' : '#17633d' }}>
+                            ₹{Number(p.balance).toLocaleString('en-IN')}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="admin-form-actions">
+                        <button
+                          className="admin-action-btn"
+                          type="button"
+                          onClick={() => {
+                            setSelectedResidentForPayment(p);
+                            setPaymentAmount(p.balance > 0 ? p.balance : '');
+                          }}
+                        >
+                          <Plus size={15} /> Add Payment
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SEND NOTICE / BULK MESSAGING */}
+        {tab === 'messaging' && (
+          <div className="admin-panel">
+            <h2>Send Notice to Residents</h2>
+            <p className="admin-section-description">
+              Compose a message and select residents to send it via WhatsApp.
+            </p>
+
+            <div className="admin-fields" style={{ marginBottom: '24px' }}>
+              <label>
+                Compose Message
+                <textarea
+                  style={{ width: '100%', minHeight: '100px', padding: '12px', borderRadius: '6px', border: '1px solid #ddd', marginTop: '8px' }}
+                  value={bulkMsgText}
+                  onChange={(e) => setBulkMsgText(e.target.value)}
+                  placeholder="Type your notice or message here..."
+                />
+              </label>
+            </div>
+
+            <div className="admin-search-form" style={{ marginBottom: '20px' }}>
+              <h3>Select Residents</h3>
+              <div className="admin-search-fields">
+                <input
+                  value={msgSearch}
+                  onChange={(e) => setMsgSearch(e.target.value)}
+                  placeholder="Search by name or room number"
+                />
+                <button
+                  className="admin-action-btn"
+                  type="button"
+                  onClick={() => {
+                    const filtered = activeResidents
+                      .filter(r =>
+                        r.name.toLowerCase().includes(msgSearch.toLowerCase()) ||
+                        String(r.roomNumber).includes(msgSearch)
+                      )
+                      .map(r => r.phoneNumber);
+                    setSelectedForMsg(prev => [...new Set([...prev, ...filtered])]);
+                  }}
+                >
+                  Select Matches
+                </button>
+                <button
+                  className="admin-cancel"
+                  type="button"
+                  onClick={() => setSelectedForMsg([])}
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-resident-heading">
+              <h3>Recipient List ({selectedForMsg.length} selected)</h3>
+              <button
+                className="admin-action-btn done"
+                disabled={selectedForMsg.length === 0 || !bulkMsgText.trim()}
+                onClick={() => {
+                  selectedForMsg.forEach((phone, index) => {
+                    setTimeout(() => {
+                      const url = `https://wa.me/${String(phone).replace(/\D/g, '')}?text=${encodeURIComponent(bulkMsgText)}`;
+                      window.open(url, '_blank');
+                    }, index * 1000); // Small delay to prevent browser block
+                  });
+                }}
+              >
+                <MessageCircle size={15} /> Send via WhatsApp
+              </button>
+            </div>
+
+            <div className="admin-data-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {activeResidents
+                .filter(r =>
+                  !msgSearch ||
+                  r.name.toLowerCase().includes(msgSearch.toLowerCase()) ||
+                  String(r.roomNumber).includes(msgSearch)
+                )
+                .map((resident) => (
+                  <div
+                    key={resident.id}
+                    className="admin-room-search-item"
+                    style={{
+                      padding: '10px',
+                      borderBottom: '1px solid #eee',
+                      backgroundColor: selectedForMsg.includes(resident.phoneNumber) ? '#f0f9ff' : 'transparent'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedForMsg.includes(resident.phoneNumber)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedForMsg([...selectedForMsg, resident.phoneNumber]);
+                          } else {
+                            setSelectedForMsg(selectedForMsg.filter(p => p !== resident.phoneNumber));
+                          }
+                        }}
+                      />
+                      <div>
+                        <b>{resident.name}</b>
+                        <small style={{ marginLeft: '10px' }}>Room {resident.roomNumber} · {resident.phoneNumber}</small>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         )}
 

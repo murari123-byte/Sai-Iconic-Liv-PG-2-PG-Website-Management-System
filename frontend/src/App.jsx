@@ -24,7 +24,7 @@ const rooms = [
     rent: 12000,
     beds: 2,
     image: '/images/two-sharing.png',
-    description: 'A two-person room with individual beds and a wardrobe.'
+    description: 'A two-person room with individual beds, 2 ceiling fans, and individual lockers for every person.'
   },
   {
     id: 2,
@@ -33,7 +33,7 @@ const rooms = [
     rent: 9000,
     beds: 3,
     image: '/images/three-sharing.png',
-    description: 'A shared room arranged for three residents.'
+    description: 'A three-person room equipped with 2 ceiling fans, individual beds, and individual lockers for every person.'
   },
   {
     id: 3,
@@ -42,7 +42,7 @@ const rooms = [
     rent: 7800,
     beds: 4,
     image: '/images/four-sharing.png',
-    description: 'A four-person room with individual beds and ceiling fans.'
+    description: 'A four-person room equipped with 2 ceiling fans, individual beds, and individual lockers for every person.'
   }
 ];
 
@@ -76,23 +76,23 @@ const gallery = [
 
 const virtualTours = [
   {
-    title: '360° View 01',
+    title: 'Building Entrance',
     url: 'https://maps.app.goo.gl/1xcopaHEJW7Z3p26A'
   },
   {
-    title: '360° View 02',
-    url: 'https://maps.app.goo.gl/isEwrqTNQTqDHxjw6'
-  },
-  {
-    title: '360° View 03',
-    url: 'https://maps.app.goo.gl/ykmQdcaJRhec3jzB6'
-  },
-  {
-    title: '360° View 04',
+    title: 'Dining Hall',
     url: 'https://maps.app.goo.gl/PyXKS3Knu9efQmy99'
   },
   {
-    title: '360° View 05',
+    title: 'Floor Corridor',
+    url: 'https://maps.app.goo.gl/isEwrqTNQTqDHxjw6'
+  },
+  {
+    title: 'Room View 01',
+    url: 'https://maps.app.goo.gl/ykmQdcaJRhec3jzB6'
+  },
+  {
+    title: 'Room View 02',
     url: 'https://maps.app.goo.gl/baFZgNBbwat65YV39'
   }
 ];

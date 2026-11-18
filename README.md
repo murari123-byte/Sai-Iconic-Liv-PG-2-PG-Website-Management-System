@@ -52,17 +52,22 @@ The first startup creates tables and seeds the three room-sharing options. `spri
 ### API endpoints
 - `GET /api/rooms` — active room-sharing options
 - `POST /api/enquiries` — save an enquiry
+- `POST /api/auth/login` — authenticate admin and get JWT token
 - `GET /api/admin/rooms` — list rooms for admin work
 - `POST /api/admin/rooms` — create a room
 - `PUT /api/admin/rooms/{id}` — update a room
 - `DELETE /api/admin/rooms/{id}` — delete a room
 - `GET /api/admin/enquiries` — list enquiries
 - `PATCH /api/admin/enquiries/{id}/contacted` — mark an enquiry contacted
+- `GET /api/admin/pg-rooms` — manage physical PG rooms & occupancy
+- `GET /api/admin/residents` — search/manage residents and bed allocations
+- `GET /api/admin/payments/summary` — view monthly rent status and track balances
+- `POST /api/admin/residents/{residentId}/payments` — record rent payments
 
-**Security note:** The admin endpoints in this starter are not yet protected by authentication. Do not expose this backend publicly until admin authentication/authorization is added. For a public deployment, also configure secrets, HTTPS, database migrations, backups, validation, and rate limiting.
+**Security note:** Admin endpoints are protected by JWT authentication. Ensure you configure your production environment with a strong `jwt.secret` and never expose your database credentials publicly. Configure HTTPS, database migrations, backups, and rate limiting before production release.
 
 ## Images
 All project images are in `frontend/public/images`. To replace an image, keep the filename or update its path in `frontend/src/App.jsx`. The room photo for each sharing option opens in a clickable detail modal. Original uploaded room photos are used without enhancement.
 
 ## Current scope
-Includes the responsive homepage, room detail modal, room rent/deposit, enquiry form with WhatsApp fallback, facilities, property gallery, directions link, and starter backend APIs/database. The admin API exists but a polished, authenticated admin dashboard is a future step.
+Includes the responsive homepage, room detail modal, room rent/deposit, enquiry form with WhatsApp fallback, facilities, property gallery, directions link, and full-stack management features for residents, payments, and admin enquiries with JWT-based authentication. The application is ready for deployment to a production environment with proper configuration of security secrets and database credentials.
